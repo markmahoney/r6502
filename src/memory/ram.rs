@@ -1,44 +1,47 @@
 use crate::io_device::IODevice;
+use crate::memory::{hl_to_addr, Memory};
 
 pub struct RAM<const N: usize> {
-    contents: [u8; N],
-}
-
-fn hl_to_addr(high: u8, low: u8) -> u16 {
-    ((high as u16) << 8) | (low as u16)
+    memory: Memory<N>
 }
 
 impl <const N: usize> RAM<N> {
-    pub fn new(contents: Option<[u8; N]>) -> Self {
-        match contents {
-            Some(contents) => Self { contents },
-            None => Self { contents: [0; N] },
-        }
+    pub fn new(memory: Option<[u8; N]>) -> Self {
+        Self { memory: Memory::<N>::new(memory) }
+    }
+
+    pub fn new_from_file(filename: &str) -> Result<Self, Box<dyn std::error::Error + 'static>> {
+        Memory::new_from_file(filename).map(|mem| Self { memory: mem })
+    }
+
+    pub fn set_from_file(&mut self, filename: &str) -> Result<(), Box<dyn std::error::Error + 'static>> {
+        self.memory.set_from_file(filename)
     }
 }
 
 impl <const N: usize> IODevice for RAM<N> {
     fn get(&self, addr: u16) -> u8 {
-        self.contents[addr as usize]
+        self.memory.contents[addr as usize]
     }
 
     fn get_hl(&self, high: u8, low: u8) -> u8 {
-        self.contents[hl_to_addr(high, low) as usize]
+        self.memory.contents[hl_to_addr(high, low) as usize]
+
     }
 
     fn put(&mut self, addr: u16, value: u8) {
-        self.contents[addr as usize] = value;
+        self.memory.contents[addr as usize] = value;
     }
 
     fn put_hl(&mut self, high: u8, low: u8, value: u8) {
-        self.contents[hl_to_addr(high, low) as usize] = value;
+        self.memory.contents[hl_to_addr(high, low) as usize] = value;
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::io_device::IODevice;
-    use crate::RAM;
+    use crate::memory::ram::RAM;
 
     #[test]
     fn new() {
