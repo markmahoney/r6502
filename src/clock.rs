@@ -51,12 +51,12 @@ impl Clock {
         thread::spawn(move || {
             loop {
                 let _ = self.oscillator.recv();
-                self.tick();
+                self.update_state();
             };
         })
     }
 
-    pub fn tick(&mut self) {
+    pub fn update_state(&mut self) {
         self.phase1 = toggle(self.phase1);
         self.phase2 = toggle(self.phase2);
 

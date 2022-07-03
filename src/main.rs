@@ -21,20 +21,21 @@ fn main() {
         0x8000..=0xFFFF,
         Box::new(ROM::<0x8000>::new(Some([255; 0x8000]))),
     );
-    
-    let mut clock = Clock::new(2.0);
+
+    // Clock updates every second, which means each line level changes state every half second.
+    let mut clock = Clock::new(1.0);
     let device1 = clock.connect_phase1();
     let device2 = clock.connect_phase2();
 
     thread::spawn(move || {
-        for update in device1 {
-            println!("PH1 state: {:?}", update);
+        for line_level in device1 {
+            println!("device1 clock line level: {:?}", line_level);
         }
     });
 
     thread::spawn(move || {
-        for update in device2 {
-            println!("PH2 state: {:?}", update);
+        for line_level in device2 {
+            println!("device2 clock line level: {:?}", line_level);
         }
     });
 
