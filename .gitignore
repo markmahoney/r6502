@@ -1,1 +1,3 @@
 /target
+/test_bin/*.o
+/test_bin/*.bin
