@@ -1,4 +1,5 @@
 use crate::io_device::IODevice;
+use crate::memory;
 use std::ops::RangeInclusive;
 
 struct DeviceMapping {
@@ -10,10 +11,6 @@ pub struct AddressDecoder {
     ranges: Vec<DeviceMapping>,
 }
 
-fn hl_to_addr(high: u8, low: u8) -> u16 {
-    ((high as u16) << 8) | (low as u16)
-}
-    
 impl AddressDecoder {
     pub fn new() -> Self {
         Self {
@@ -25,11 +22,17 @@ impl AddressDecoder {
         self.ranges.push(DeviceMapping { range, device })
     }
 
-    fn get_device(&mut self, addr: u16) -> Option<&mut DeviceMapping> {
-        self.ranges.iter_mut().find(|dm| dm.range.contains(&addr))
+    fn get_device(&self, addr: u16) -> Option<&DeviceMapping> {
+        self.ranges.iter().find(|dm| dm.range.contains(&addr))
     }
 
-    pub fn get(&mut self, addr: u16) -> u8 {
+    fn get_device_mut(&mut self, addr: u16) -> Option<&mut DeviceMapping> {
+        self.ranges.iter_mut().find(|dm| dm.range.contains(&addr))
+    }
+}
+
+impl IODevice for AddressDecoder {
+    fn get(&self, addr: u16) -> u8 {
         match self.get_device(addr) {
             Some(dm) => {
                 let offset = addr - dm.range.start();
@@ -39,12 +42,12 @@ impl AddressDecoder {
         }
     }
 
-    pub fn get_hl(&mut self, high: u8, low: u8) -> u8 {
-        self.get(hl_to_addr(high, low))
+    fn get_hl(&self, high: u8, low: u8) -> u8 {
+        self.get(memory::hl_to_addr(high, low))
     }
 
-    pub fn put(&mut self, addr: u16, value: u8) {
-        match self.get_device(addr) {
+    fn put(&mut self, addr: u16, value: u8) {
+        match self.get_device_mut(addr) {
             Some(dm) => {
                 let offset = addr - dm.range.start();
                 dm.device.put(offset, value);
@@ -53,19 +56,20 @@ impl AddressDecoder {
         }
     }
 
-    pub fn put_hl(&mut self, high: u8, low: u8, value: u8) {
-        self.put(hl_to_addr(high, low), value);
+    fn put_hl(&mut self, high: u8, low: u8, value: u8) {
+        self.put(memory::hl_to_addr(high, low), value);
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::address_decoder::AddressDecoder;
+    use crate::io_device::IODevice;
     use crate::memory::ram::RAM;
 
     #[test]
     fn new() {
-        let mut decoder = AddressDecoder::new();
+        let decoder = AddressDecoder::new();
         assert_eq!(decoder.get(0x0000), 0);
     }
 
