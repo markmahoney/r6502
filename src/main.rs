@@ -1,13 +1,14 @@
 pub mod address_decoder;
+pub mod cpu;
 pub mod clock;
 pub mod io_device;
 pub mod memory;
 
 use crate::address_decoder::AddressDecoder;
 use crate::clock::Clock;
+use crate::cpu::cpu_6502::CPU6502;
 use crate::memory::ram::RAM;
 use crate::memory::rom::ROM;
-use std::thread;
 
 fn main() {
     println!("Hello, world!");
@@ -22,22 +23,11 @@ fn main() {
         Box::new(ROM::<0x8000>::new(Some([255; 0x8000]))),
     );
 
-    // Clock updates every second, which means each line level changes state every half second.
-    let mut clock = Clock::new(1.0);
-    let device1 = clock.connect_phase1();
-    let device2 = clock.connect_phase2();
+    let mut cpu = CPU6502::new();
+    let clock = Clock::new(1.0);
 
-    thread::spawn(move || {
-        for line_level in device1 {
-            println!("device1 clock line level: {:?}", line_level);
-        }
-    });
-
-    thread::spawn(move || {
-        for line_level in device2 {
-            println!("device2 clock line level: {:?}", line_level);
-        }
-    });
-
-    clock.start().join().expect("???");
+    clock.start(|| {
+        cpu.tick(&mut decoder);
+        true
+    })
 }
