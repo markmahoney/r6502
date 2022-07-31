@@ -13,6 +13,16 @@ pub trait Instruction {
     fn cycle(&mut self, step: usize, reg: &mut Registers, address_bus: &mut dyn IODevice) -> InstructionState;
 }
 
+/**
+ * I'm trying to make these operations cycle-accurate, but currently that involves injecting an extra
+ * cycle for no good reason every now and then. Reasoning about 6502 pipelining gives me a headache.
+ * There's a lot that needs to be reexamined and tightened up in here.
+ *
+ * Resources I've been using:
+ * - http://archive.6502.org/datasheets/synertek_programming_manual.pdf
+ * - https://www.masswerk.at/6502/6502_instruction_set.html
+ **/
+
 // ADC
 // absolute
 // TODO: handle decimal mode

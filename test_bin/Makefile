@@ -1,3 +1,6 @@
+# You'll need cc65 installed to compile the example assembler programs
+# `brew install cc65` on a mac 
+
 TARGETS = add
 MEM_CFG = memcfg/ramrom.cfg
 
