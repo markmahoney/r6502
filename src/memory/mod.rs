@@ -27,7 +27,7 @@ impl <const N: usize> Memory<N> {
         let contents = fs::read(filename)?;
 
         // TODO: is there a way to do this in chunks, or with something like memcpy?
-        for i in 0..self.contents.len() {
+        for i in 0..contents.len() {
             self.contents[i] = contents[i];
         }
         
